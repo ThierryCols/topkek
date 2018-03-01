@@ -103,7 +103,7 @@ def valid_rides_func(t, ride, vehicle_pos):
 
 
 def optimization_func(t, ride, vehicle_pos):
-    return get_distance_between(vehicle_pos, ride)
+    return get_distance_between(vehicle_pos, ride) + (t - ride['earliest_start']) ** 2
 
 
 def choose_ride(t, rides, vehicle_pos):
@@ -177,24 +177,22 @@ vehicle_positions = [{
 vehicle_t = [0] * parameters['vehicles']
 
 
-def get_unfinished_vehicles(vehicle_t):
+def get_unfinished_vehicles(vehicle_t, parameters):
+    return [_vehicle for _vehicle, _vehicle_t in enumerate(vehicle_t) if _vehicle_t < parameters['time']]
 
 while min(vehicle_t) < parameters['time']:
-
-
-    for vehicle in range(parameters['vehicles']):
-    # print('Vehicle', vehicle)
-
-    chosen_ride = choose_ride(vehicle_t[vehicle], available_rides, vehicle_positions[vehicle])
-
-    while chosen_ride is not None and vehicle_t[vehicle] < parameters['time']:
-        # Add ride to assignations
-        assignations[vehicle].append(rides_hashtable[get_hash(chosen_ride)])
-
-        available_rides = list(filter(lambda ride: ride != chosen_ride, available_rides))
-        (vehicle_t[vehicle], vehicle_positions[vehicle]) = do_ride(vehicle_t[vehicle], vehicle_positions[vehicle], chosen_ride)
-        # print('new t', vehicle_t[vehicle], 'vehicle position', vehicle_positions[vehicle])
+    for vehicle in get_unfinished_vehicles(vehicle_t, parameters):
+        # print('Vehicle', vehicle)
         chosen_ride = choose_ride(vehicle_t[vehicle], available_rides, vehicle_positions[vehicle])
+
+        if chosen_ride is not None:
+            assignations[vehicle].append(rides_hashtable[get_hash(chosen_ride)])
+
+            available_rides = list(filter(lambda ride: ride != chosen_ride, available_rides))
+            (vehicle_t[vehicle], vehicle_positions[vehicle]) = do_ride(vehicle_t[vehicle], vehicle_positions[vehicle], chosen_ride)
+            # print('new t', vehicle_t[vehicle], 'vehicle position', vehicle_positions[vehicle])
+        else:
+            vehicle_t[vehicle] = parameters['time']
 
 print(get_score(assignations, rides, parameters))
 if len(available_rides) == 0:
