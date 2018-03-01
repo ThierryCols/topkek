@@ -98,13 +98,17 @@ def get_score(assignation, rides, parameters):
     return sum(get_vehicle_score(vehicle_assignation, rides, parameters) for vehicle_assignation in assignation)
 
 
-def optimization_func(t, ride, vehicle_pos):
+def valid_rides_func(t, ride, vehicle_pos):
     return (t + get_distance(ride)) + get_distance_between(vehicle_pos, ride)
+
+
+def optimization_func(t, ride, vehicle_pos):
+    return get_distance_between(vehicle_pos, ride)
 
 
 def choose_ride(t, rides, vehicle_pos):
     filtered_rides = list(filter(
-        lambda ride: ride['latest_finish'] >= optimization_func(t, ride, vehicle_pos),
+        lambda ride: ride['latest_finish'] >= valid_rides_func(t, ride, vehicle_pos),
         rides
     ))
     if filtered_rides == []:
