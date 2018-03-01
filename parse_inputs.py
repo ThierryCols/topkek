@@ -1,4 +1,5 @@
 from math import fabs
+from operator import attrgetter
 import pprint
 
 pp = pprint.PrettyPrinter(indent=4)
@@ -22,10 +23,8 @@ with open('a_example.in') as f:
 parameters = parse_params(lines[0])
 rides = parse_rides(lines[1:])
 
-assignation = [
-    [0],     # 1
-    [2, 1]   # 2
-]
+def get_distance_between(pos_a, pos_b):
+    return get_distance(get_ride_between_rides(pos_a, pos_b))
 
 def get_distance(ride):
     return fabs(ride['row_start'] - ride['row_finish']) + fabs(ride['col_start'] - ride['col_finish'])
@@ -51,6 +50,13 @@ def get_ride_between_rides(ride_a, ride_b):
         'col_finish': ride_b['col_start'],
     }
     return ride_between
+
+def get_hash(d):
+    return hash(frozenset(d.items()))
+
+def build_hashtable(rides):
+    hashes = list(map(get_hash, rides))
+    return dict(zip(hashes, range(len(rides))))
 
 def get_vehicle_score(vehicle_assignation, rides, parameters):
     position = (0, 0)
@@ -87,8 +93,7 @@ def get_vehicle_score(vehicle_assignation, rides, parameters):
         # Move to the next ride
         if next_ride_idx is not None:
             next_ride = rides[next_ride_idx]
-            ride_between = get_ride_between_rides(ride, next_ride)
-            t += get_distance(ride_between)
+            t += get_distance_between(ride, next_ride)
 
         print('Ride', ride, 'gave score', ride_score)
         score += ride_score
@@ -98,10 +103,74 @@ def get_vehicle_score(vehicle_assignation, rides, parameters):
 def get_score(assignation, rides, parameters):
     return sum(get_vehicle_score(vehicle_assignation, rides, parameters) for vehicle_assignation in assignation)
 
+#### Execution
 
 pp.pprint(parameters)
 pp.pprint(rides)
 
-score = get_score(assignation, rides, parameters)
+rides_hashtable = build_hashtable(rides)
 
-print(score)
+pp.pprint(rides_hashtable)
+
+assignation = [
+    [0],     # 1
+    [2, 1]   # 2
+]
+
+score = get_score(assignation, rides, parameters)
+assert score == 10
+
+def optimization_func(t, ride, vehicle_pos):
+    return (t + get_distance(ride)) + get_distance_between(vehicle_pos, ride)
+
+
+def choose_ride(t, rides, vehicle_pos):
+    filtered_rides = list(filter(
+        lambda ride: ride['latest_finish'] >= optimization_func(t, ride, vehicle_pos),
+        rides
+    ))
+    if filtered_rides == []:
+        return None
+    greedy_ride = min(filtered_rides, key=lambda ride: optimization_func(t, ride, vehicle_pos))
+    return greedy_ride
+
+
+def do_ride(t, vehicle_position, ride):
+    t += get_distance_between(vehicle_position, ride)
+    t = max(ride['earliest_start'], t)
+    t += get_distance(ride)
+    vehicle_position = ride
+    return t, vehicle_position
+
+# Optimization program bitch
+print()
+
+available_rides = rides[:]
+
+assignations = [[] for _ in range(parameters['vehicles'])]
+
+for vehicle in range(parameters['vehicles']):
+    print('Vehicle', vehicle)
+
+    t = 0
+    vehicle_position = {
+        'row_finish': 0,
+        'col_finish': 0,
+    }
+    chosen_ride = choose_ride(t, available_rides, vehicle_position)
+
+    while chosen_ride is not None and t < parameters['time']:
+        # Add ride to assignations
+        assignations[vehicle].append(rides_hashtable[get_hash(chosen_ride)])
+
+        available_rides = list(filter(lambda ride: ride != chosen_ride, available_rides))
+        pp.pprint(chosen_ride)
+        (t, vehicle_position) = do_ride(t, vehicle_position, chosen_ride)
+        print('new t', t, 'vehicle position', vehicle_position)
+        chosen_ride = choose_ride(t, available_rides, vehicle_position)
+
+print(get_score(assignations, rides, parameters))
+if len(available_rides) == 0:
+    print('Missing', len(available_rides), 'rides! Woohoooooooo')
+else:
+    print('Missing', len(available_rides), 'rides....... :\'(')
