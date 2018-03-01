@@ -166,25 +166,26 @@ available_rides = rides[:]
 
 assignations = [[] for _ in range(parameters['vehicles'])]
 
+vehicle_positions = [{
+    'row_finish': 0,
+    'col_finish': 0,
+} for _ in range(parameters['vehicles'])]
+vehicle_t = [0] * parameters['vehicles']
+
 for vehicle in range(parameters['vehicles']):
     print('Vehicle', vehicle)
 
-    t = 0
-    vehicle_position = {
-        'row_finish': 0,
-        'col_finish': 0,
-    }
-    chosen_ride = choose_ride(t, available_rides, vehicle_position)
+    chosen_ride = choose_ride(vehicle_t[vehicle], available_rides, vehicle_positions[vehicle])
 
-    while chosen_ride is not None and t < parameters['time']:
+    while chosen_ride is not None and vehicle_t[vehicle] < parameters['time']:
         # Add ride to assignations
         assignations[vehicle].append(rides_hashtable[get_hash(chosen_ride)])
 
         available_rides = list(filter(lambda ride: ride != chosen_ride, available_rides))
         pp.pprint(chosen_ride)
-        (t, vehicle_position) = do_ride(t, vehicle_position, chosen_ride)
-        print('new t', t, 'vehicle position', vehicle_position)
-        chosen_ride = choose_ride(t, available_rides, vehicle_position)
+        (vehicle_t[vehicle], vehicle_positions[vehicle]) = do_ride(vehicle_t[vehicle], vehicle_positions[vehicle], chosen_ride)
+        print('new t', vehicle_t[vehicle], 'vehicle position', vehicle_positions[vehicle])
+        chosen_ride = choose_ride(vehicle_t[vehicle], available_rides, vehicle_positions[vehicle])
 
 print(get_score(assignations, rides, parameters))
 if len(available_rides) == 0:
