@@ -89,7 +89,7 @@ def get_vehicle_score(vehicle_assignation, rides, parameters):
             next_ride = rides[next_ride_idx]
             t += get_distance_between(ride, next_ride)
 
-        print('Ride', ride, 'gave score', ride_score)
+        # print('Ride', ride, 'gave score', ride_score)
         score += ride_score
 
     return score
@@ -177,7 +177,7 @@ vehicle_positions = [{
 vehicle_t = [0] * parameters['vehicles']
 
 for vehicle in range(parameters['vehicles']):
-    print('Vehicle', vehicle)
+    # print('Vehicle', vehicle)
 
     chosen_ride = choose_ride(vehicle_t[vehicle], available_rides, vehicle_positions[vehicle])
 
@@ -188,7 +188,7 @@ for vehicle in range(parameters['vehicles']):
         available_rides = list(filter(lambda ride: ride != chosen_ride, available_rides))
         pp.pprint(chosen_ride)
         (vehicle_t[vehicle], vehicle_positions[vehicle]) = do_ride(vehicle_t[vehicle], vehicle_positions[vehicle], chosen_ride)
-        print('new t', vehicle_t[vehicle], 'vehicle position', vehicle_positions[vehicle])
+        # print('new t', vehicle_t[vehicle], 'vehicle position', vehicle_positions[vehicle])
         chosen_ride = choose_ride(vehicle_t[vehicle], available_rides, vehicle_positions[vehicle])
 
 print(get_score(assignations, rides, parameters))
