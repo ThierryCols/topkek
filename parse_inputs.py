@@ -17,12 +17,6 @@ def parse_ride(ride_string):
 def parse_rides(rides_string):
     return list(map(parse_ride, rides_string))
 
-with open('a_example.in') as f:
-    lines = f.readlines()
-
-parameters = parse_params(lines[0])
-rides = parse_rides(lines[1:])
-
 def get_distance_between(pos_a, pos_b):
     return get_distance(get_ride_between_rides(pos_a, pos_b))
 
@@ -103,22 +97,6 @@ def get_vehicle_score(vehicle_assignation, rides, parameters):
 def get_score(assignation, rides, parameters):
     return sum(get_vehicle_score(vehicle_assignation, rides, parameters) for vehicle_assignation in assignation)
 
-#### Execution
-
-pp.pprint(parameters)
-pp.pprint(rides)
-
-rides_hashtable = build_hashtable(rides)
-
-pp.pprint(rides_hashtable)
-
-assignation = [
-    [0],     # 1
-    [2, 1]   # 2
-]
-
-score = get_score(assignation, rides, parameters)
-assert score == 10
 
 def optimization_func(t, ride, vehicle_pos):
     return (t + get_distance(ride)) + get_distance_between(vehicle_pos, ride)
@@ -142,7 +120,37 @@ def do_ride(t, vehicle_position, ride):
     vehicle_position = ride
     return t, vehicle_position
 
-# Optimization program bitch
+#### Check that everything is valid for example a
+
+with open('a_example.in') as f:
+    lines = f.readlines()
+
+parameters = parse_params(lines[0])
+rides = parse_rides(lines[1:])
+
+pp.pprint(parameters)
+pp.pprint(rides)
+
+rides_hashtable = build_hashtable(rides)
+
+pp.pprint(rides_hashtable)
+
+assignation = [
+    [0],     # 1
+    [2, 1]   # 2
+]
+
+score = get_score(assignation, rides, parameters)
+assert score == 10
+
+# Optimization program bitch on a real example yeah
+
+with open('b_example.in') as f:
+    lines = f.readlines()
+
+parameters = parse_params(lines[0])
+rides = parse_rides(lines[1:])
+
 print()
 
 available_rides = rides[:]
