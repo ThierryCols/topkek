@@ -166,38 +166,40 @@ rides_hashtable = build_hashtable(rides)
 
 print()
 
-available_rides = rides[:]
-
-assignations = [[] for _ in range(parameters['vehicles'])]
-
-vehicle_positions = [{
-    'row_finish': 0,
-    'col_finish': 0,
-} for _ in range(parameters['vehicles'])]
-vehicle_t = [0] * parameters['vehicles']
-
-
 def get_unfinished_vehicles(vehicle_t, parameters):
     return [_vehicle for _vehicle, _vehicle_t in enumerate(vehicle_t) if _vehicle_t < parameters['time']]
 
-while min(vehicle_t) < parameters['time']:
-    for vehicle in get_unfinished_vehicles(vehicle_t, parameters):
-        # print('Vehicle', vehicle)
-        chosen_ride = choose_ride(vehicle_t[vehicle], available_rides, vehicle_positions[vehicle])
+def profondeur(rides, parameters):
+    available_rides = rides[:]
 
-        if chosen_ride is not None:
-            assignations[vehicle].append(rides_hashtable[get_hash(chosen_ride)])
+    assignations = [[] for _ in range(parameters['vehicles'])]
 
-            available_rides = list(filter(lambda ride: ride != chosen_ride, available_rides))
-            (vehicle_t[vehicle], vehicle_positions[vehicle]) = do_ride(vehicle_t[vehicle], vehicle_positions[vehicle], chosen_ride)
-            # print('new t', vehicle_t[vehicle], 'vehicle position', vehicle_positions[vehicle])
-        else:
-            vehicle_t[vehicle] = parameters['time']
+    vehicle_positions = [{
+        'row_finish': 0,
+        'col_finish': 0,
+    } for _ in range(parameters['vehicles'])]
+    vehicle_t = [0] * parameters['vehicles']
 
-print(get_score(assignations, rides, parameters))
-if len(available_rides) == 0:
-    print('Missing', len(available_rides), 'rides! Woohoooooooo')
-else:
-    print('Missing', len(available_rides), 'rides....... :\'(')
+    while min(vehicle_t) < parameters['time']:
+        for vehicle in get_unfinished_vehicles(vehicle_t, parameters):
+            # print('Vehicle', vehicle)
+            chosen_ride = choose_ride(vehicle_t[vehicle], available_rides, vehicle_positions[vehicle])
+
+            if chosen_ride is not None:
+                assignations[vehicle].append(rides_hashtable[get_hash(chosen_ride)])
+
+                available_rides = list(filter(lambda ride: ride != chosen_ride, available_rides))
+                (vehicle_t[vehicle], vehicle_positions[vehicle]) = do_ride(vehicle_t[vehicle], vehicle_positions[vehicle], chosen_ride)
+                # print('new t', vehicle_t[vehicle], 'vehicle position', vehicle_positions[vehicle])
+            else:
+                vehicle_t[vehicle] = parameters['time']
+    print(get_score(assignations, rides, parameters))
+    if len(available_rides) == 0:
+        print('Missing', len(available_rides), 'rides! Woohoooooooo')
+    else:
+        print('Missing', len(available_rides), 'rides....... :\'(')
+    return assignations
+
+assignations = profondeur(rides, parameters)
 
 output_assignations(assignations)
