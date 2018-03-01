@@ -176,7 +176,13 @@ vehicle_positions = [{
 } for _ in range(parameters['vehicles'])]
 vehicle_t = [0] * parameters['vehicles']
 
-for vehicle in range(parameters['vehicles']):
+
+def get_unfinished_vehicles(vehicle_t):
+
+while min(vehicle_t) < parameters['time']:
+
+
+    for vehicle in range(parameters['vehicles']):
     # print('Vehicle', vehicle)
 
     chosen_ride = choose_ride(vehicle_t[vehicle], available_rides, vehicle_positions[vehicle])
@@ -186,7 +192,6 @@ for vehicle in range(parameters['vehicles']):
         assignations[vehicle].append(rides_hashtable[get_hash(chosen_ride)])
 
         available_rides = list(filter(lambda ride: ride != chosen_ride, available_rides))
-        pp.pprint(chosen_ride)
         (vehicle_t[vehicle], vehicle_positions[vehicle]) = do_ride(vehicle_t[vehicle], vehicle_positions[vehicle], chosen_ride)
         # print('new t', vehicle_t[vehicle], 'vehicle position', vehicle_positions[vehicle])
         chosen_ride = choose_ride(vehicle_t[vehicle], available_rides, vehicle_positions[vehicle])
