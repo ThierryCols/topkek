@@ -120,6 +120,15 @@ def do_ride(t, vehicle_position, ride):
     vehicle_position = ride
     return t, vehicle_position
 
+
+def output_assignations(assignations):
+    with open(filename + '.out', 'w+') as f:
+        string_assignations = []
+        for rides in assignations:
+            string_assignations.append(' '.join([str(_) for _ in [len(rides), *rides]]) + '\n')
+        f.writelines(string_assignations)
+
+
 #### Check that everything is valid for example a
 
 with open('a_example.in') as f:
@@ -131,10 +140,6 @@ rides = parse_rides(lines[1:])
 pp.pprint(parameters)
 pp.pprint(rides)
 
-rides_hashtable = build_hashtable(rides)
-
-pp.pprint(rides_hashtable)
-
 assignation = [
     [0],     # 1
     [2, 1]   # 2
@@ -145,11 +150,15 @@ assert score == 10
 
 # Optimization program bitch on a real example yeah
 
-with open('b_example.in') as f:
+filename = 'b_should_be_easy'
+
+with open(filename + '.in') as f:
     lines = f.readlines()
 
 parameters = parse_params(lines[0])
 rides = parse_rides(lines[1:])
+
+rides_hashtable = build_hashtable(rides)
 
 print()
 
@@ -182,3 +191,5 @@ if len(available_rides) == 0:
     print('Missing', len(available_rides), 'rides! Woohoooooooo')
 else:
     print('Missing', len(available_rides), 'rides....... :\'(')
+
+output_assignations(assignations)
