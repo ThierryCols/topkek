@@ -1,6 +1,8 @@
 from math import fabs
 from operator import attrgetter
 import pprint
+from collections import Counter
+import random
 
 pp = pprint.PrettyPrinter(indent=4)
 
@@ -112,9 +114,9 @@ def choose_ride(t, rides, vehicle_pos):
         rides
     ))
     if filtered_rides == []:
-        return None
+        return None, 0
     greedy_ride = min(filtered_rides, key=lambda ride: optimization_func(t, ride, vehicle_pos))
-    return greedy_ride
+    return greedy_ride, optimization_func(t, greedy_ride, vehicle_pos)
 
 
 def do_ride(t, vehicle_position, ride):
@@ -183,7 +185,7 @@ def profondeur(rides, parameters):
     while min(vehicle_t) < parameters['time']:
         for vehicle in get_unfinished_vehicles(vehicle_t, parameters):
             # print('Vehicle', vehicle)
-            chosen_ride = choose_ride(vehicle_t[vehicle], available_rides, vehicle_positions[vehicle])
+            chosen_ride, _ = choose_ride(vehicle_t[vehicle], available_rides, vehicle_positions[vehicle])
 
             if chosen_ride is not None:
                 assignations[vehicle].append(rides_hashtable[get_hash(chosen_ride)])
@@ -200,6 +202,39 @@ def profondeur(rides, parameters):
         print('Missing', len(available_rides), 'rides....... :\'(')
     return assignations
 
-assignations = profondeur(rides, parameters)
+def profondeur_shuffle(rides, parameters):
+    available_rides = rides[:]
+
+    assignations = [[] for _ in range(parameters['vehicles'])]
+
+    vehicle_positions = [{
+        'row_finish': 0,
+        'col_finish': 0,
+    } for _ in range(parameters['vehicles'])]
+    vehicle_t = [0] * parameters['vehicles']
+
+    while min(vehicle_t) < parameters['time']:
+        remaining_vehicles = get_unfinished_vehicles(vehicle_t, parameters)
+        random.shuffle(remaining_vehicles)
+        for vehicle in remaining_vehicles:
+            # print('Vehicle', vehicle)
+            chosen_ride, _ = choose_ride(vehicle_t[vehicle], available_rides, vehicle_positions[vehicle])
+
+            if chosen_ride is not None:
+                assignations[vehicle].append(rides_hashtable[get_hash(chosen_ride)])
+
+                available_rides = list(filter(lambda ride: ride != chosen_ride, available_rides))
+                (vehicle_t[vehicle], vehicle_positions[vehicle]) = do_ride(vehicle_t[vehicle], vehicle_positions[vehicle], chosen_ride)
+                # print('new t', vehicle_t[vehicle], 'vehicle position', vehicle_positions[vehicle])
+            else:
+                vehicle_t[vehicle] = parameters['time']
+    print(get_score(assignations, rides, parameters))
+    if len(available_rides) == 0:
+        print('Missing', len(available_rides), 'rides! Woohoooooooo')
+    else:
+        print('Missing', len(available_rides), 'rides....... :\'(')
+    return assignations
+
+assignations = profondeur_shuffle(rides, parameters)
 
 output_assignations(assignations)
